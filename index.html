@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Primary SEO -->
+  <title>ClauseGuard — Free Contract Red Flag Detector for Chrome</title>
+  <meta name="description" content="ClauseGuard scans contracts for dangerous clauses, hidden traps, and missing protections. 60+ detection rules. 100% offline. No account needed. Free Chrome extension.">
+  <meta name="keywords" content="contract scanner, red flag detector, chrome extension, freelancer contract, employment contract, legal protection, contract review, clause checker">
+  <meta name="author" content="ClauseGuard">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://techikmah.github.io/clauseguard/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ClauseGuard — Contract Red Flag Detector">
+  <meta property="og:description" content="Scans contracts for dangerous clauses before you sign. 60+ rules. 100% offline. Free Chrome extension.">
+  <meta property="og:url" content="https://yourname.github.io/clauseguard/">
+  <meta property="og:image" content="https://yourname.github.io/clauseguard/og-image.png">
+  <meta property="og:site_name" content="ClauseGuard">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ClauseGuard — Contract Red Flag Detector">
+  <meta name="twitter:description" content="Stop signing contracts that could cost you. 60+ red flag rules. Free Chrome extension.">
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#07080D">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════════
+       RESET & TOKENS
+    ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    :root {
+      --bg:        #07080D;
+      --bg2:       #0C0D14;
+      --s1:        #10121C;
+      --s2:        #161926;
+      --s3:        #1E2336;
+      --border:    rgba(255,255,255,0.07);
+      --b2:        rgba(255,255,255,0.13);
+      --text:      #EDE8DE;
+      --muted:     rgba(237,232,222,0.55);
+      --dim:       rgba(237,232,222,0.3);
+      --red:       #DC2626;
+      --red-l:     #EF4444;
+      --red-xl:    #FCA5A5;
+      --red-dim:   rgba(220,38,38,0.1);
+      --red-glow:  rgba(220,38,38,0.2);
+      --amber:     #D97706;
+      --amber-l:   #F59E0B;
+      --amber-dim: rgba(217,119,6,0.1);
+      --green:     #059669;
+      --green-l:   #10B981;
+      --green-dim: rgba(5,150,105,0.1);
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans:  'DM Sans', system-ui, sans-serif;
+      --font-mono:  'JetBrains Mono', monospace;
+      --radius:     12px;
+      --max-w:      1140px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; font-family: var(--font-sans); }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ══════════════════════════════════════════
+       NAV
+    ══════════════════════════════════════════ */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      height: 64px;
+      background: rgba(7,8,13,0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+    }
+    .nav .container {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-shield {
+      width: 32px; height: 32px;
+      background: linear-gradient(145deg, #DC2626, #991B1B);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(220,38,38,0.3);
+      flex-shrink: 0;
+    }
+    .nav-shield svg { width: 17px; height: 17px; }
+    .nav-name {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 6px;
+      list-style: none;
+    }
+    .nav-links a {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .nav-install {
+      padding: 8px 18px !important;
+      background: var(--red) !important;
+      color: #fff !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      transition: all 0.2s !important;
+      box-shadow: 0 4px 14px rgba(220,38,38,0.25) !important;
+    }
+    .nav-install:hover {
+      background: #EF4444 !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(220,38,38,0.4) !important;
+    }
+    .nav-hamburger {
+      display: none;
+      flex-direction: column; gap: 5px;
+      background: none; border: none; padding: 4px;
+    }
+    .nav-hamburger span {
+      display: block; width: 22px; height: 2px;
+      background: var(--text); border-radius: 2px;
+      transition: all 0.3s;
+    }
+    .mobile-menu {
+      display: none;
+      position: fixed; top: 64px; left: 0; right: 0;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px 24px; z-index: 999;
+      flex-direction: column; gap: 4px;
+    }
+    .mobile-menu a {
+      display: block; padding: 11px 14px;
+      border-radius: 8px; font-size: 15px;
+      color: var(--muted);
+    }
+    .mobile-menu a:hover { color: var(--text); background: var(--s1); }
+    .mobile-menu.open { display: flex; }
+
+    /* ══════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════ */
+    .hero {
+      padding: 148px 0 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Background grain + radial glow */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% -10%, rgba(220,38,38,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(220,38,38,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .hero-label {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      background: var(--red-dim);
+      border: 1px solid rgba(220,38,38,0.25);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--red-l);
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+    .hero-label span { width: 6px; height: 6px; border-radius: 50%; background: var(--red-l); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+    h1.hero-title {
+      font-family: var(--font-serif);
+      font-size: clamp(38px, 5vw, 60px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin-bottom: 22px;
+    }
+    h1.hero-title em {
+      font-style: italic;
+      color: var(--red-l);
+    }
+    .hero-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: 34px;
+    }
+    .hero-ctas {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 26px;
+      background: var(--red);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(220,38,38,0.3);
+      letter-spacing: 0.1px;
+    }
+    .btn-primary:hover { background: #EF4444; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(220,38,38,0.4); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 24px;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid var(--b2);
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { background: var(--s1); color: var(--text); border-color: var(--b2); }
+    .hero-note {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--dim);
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .hero-note span { display: flex; align-items: center; gap: 5px; }
+    .hero-note span::before { content: '✓'; color: var(--green-l); font-size: 11px; }
+
+    /* Hero Visual — CSS shield with floating badges */
+    .hero-visual {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      height: 420px;
+    }
+    .shield-wrap {
+      position: relative;
+      width: 180px; height: 200px;
+      animation: floatY 4s ease-in-out infinite;
+    }
+    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .shield-svg {
+      width: 180px; height: 200px;
+      filter: drop-shadow(0 20px 60px rgba(220,38,38,0.4));
+    }
+    /* Orbiting flag chips */
+    .flag-chip {
+      position: absolute;
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      animation: chipIn 0.6s ease forwards;
+    }
+    .flag-chip.c { background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.3); color: #FCA5A5; }
+    .flag-chip.w { background: rgba(217,119,6,0.15);  border: 1px solid rgba(217,119,6,0.3);  color: #FCD34D; }
+    .flag-chip.m { background: rgba(5,150,105,0.15);  border: 1px solid rgba(5,150,105,0.3);  color: #6EE7B7; }
+    .flag-chip:nth-child(1) { top: 10px;  right: -160px; animation-delay: 0.3s; }
+    .flag-chip:nth-child(2) { top: 70px;  right: -175px; animation-delay: 0.5s; }
+    .flag-chip:nth-child(3) { top: 130px; right: -155px; animation-delay: 0.7s; }
+    .flag-chip:nth-child(4) { bottom: 80px; left: -165px; animation-delay: 0.9s; }
+    .flag-chip:nth-child(5) { bottom: 20px; left: -145px; animation-delay: 1.1s; }
+    .flag-chip:nth-child(6) { top: 30px;  left: -155px; animation-delay: 1.3s; }
+    @keyframes chipIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .sev-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .c .sev-dot { background: var(--red-l); }
+    .w .sev-dot { background: var(--amber-l); }
+    .m .sev-dot { background: var(--green-l); }
+
+    /* ══════════════════════════════════════════
+       STATS BAND
+    ══════════════════════════════════════════ */
+    .stats-band {
+      background: var(--s1);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .stat-item {
+      background: var(--s1);
+      padding: 22px 28px;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: var(--font-serif);
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--red-l);
+      margin-bottom: 4px;
+    }
+    .stat-lbl {
+      font-size: 12px;
+      color: var(--dim);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    /* ══════════════════════════════════════════
+       SECTION SHARED
+    ══════════════════════════════════════════ */
+    section { padding: 96px 0; }
+    .sec-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--red-l);
+      margin-bottom: 12px;
+    }
+    .sec-title {
+      font-family: var(--font-serif);
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    .sec-title em { font-style: italic; color: var(--red-l); }
+    .sec-sub {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* ══════════════════════════════════════════
+       HOW IT WORKS
+    ══════════════════════════════════════════ */
+    .how-section { background: var(--bg2); }
+    .how-header { text-align: center; margin-bottom: 56px; }
+    .how-header .sec-sub { margin: 0 auto; }
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .how-step {
+      background: var(--s1);
+      padding: 40px 32px;
+      position: relative;
+    }
+    .how-step-num {
+      font-family: var(--font-serif);
+      font-size: 64px;
+      font-weight: 700;
+      color: rgba(220,38,38,0.12);
+      line-height: 1;
+      position: absolute;
+      top: 24px; right: 28px;
+    }
+    .how-step-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    .how-step-icon.red   { background: var(--red-dim); }
+    .how-step-icon.amber { background: var(--amber-dim); }
+    .how-step-icon.green { background: var(--green-dim); }
+    .how-step h3 {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .how-step p { font-size: 13.5px; color: var(--muted); line-height: 1.65; }
+
+    /* ══════════════════════════════════════════
+       WHAT WE CATCH — Category Grid
+    ══════════════════════════════════════════ */
+    .catch-header { margin-bottom: 48px; }
+    .catch-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .catch-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s;
+      cursor: default;
+    }
+    .catch-card:hover {
+      border-color: rgba(220,38,38,0.25);
+      background: var(--s2);
+      transform: translateY(-2px);
+    }
+    .catch-card-icon { font-size: 24px; margin-bottom: 10px; }
+    .catch-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+    .catch-card-desc {
+      font-size: 11.5px;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+    .catch-card-count {
+      margin-top: 12px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--red-l);
+      letter-spacing: 0.5px;
+    }
+
+    /* ══════════════════════════════════════════
+       LIVE EXAMPLE — Report mockup
+    ══════════════════════════════════════════ */
+    .example-section { background: var(--bg2); }
+    .example-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .example-text { padding-top: 20px; }
+    .example-text .sec-sub { margin-top: 10px; }
+    .example-bullets {
+      margin-top: 28px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .ex-bullet {
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .ex-bullet-icon {
+      width: 32px; height: 32px; flex-shrink: 0;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .ex-bullet-icon.red   { background: var(--red-dim); }
+    .ex-bullet-icon.amber { background: var(--amber-dim); }
+    .ex-bullet-icon.green { background: var(--green-dim); }
+    .ex-bullet-text strong { display: block; font-size: 13.5px; color: var(--text); margin-bottom: 2px; }
+    .ex-bullet-text span   { font-size: 12.5px; color: var(--muted); }
+
+    /* Report card mockup */
+    .report-mockup {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    }
+    .mock-topbar {
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .mock-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .mock-title { font-size: 11px; color: var(--dim); margin-left: 4px; font-family: var(--font-mono); }
+    .mock-body { padding: 20px; }
+    .mock-overview {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .mock-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .mock-pill {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .mock-pill.red   { background: var(--red-dim);   color: var(--red-xl);  border: 1px solid rgba(220,38,38,0.2); }
+    .mock-pill.type  { background: rgba(255,255,255,0.04); color: var(--dim); border: 1px solid var(--border); }
+    .mock-pill.score { background: rgba(255,255,255,0.04); color: var(--amber-l); border: 1px solid rgba(217,119,6,0.2); }
+    .mock-overview-text { font-size: 11px; color: var(--muted); line-height: 1.6; }
+    /* Flag card mockups */
+    .mock-flag {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .mock-flag.critical { border-left: 3px solid var(--red); }
+    .mock-flag.warning  { border-left: 3px solid var(--amber); }
+    .mock-flag-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px;
+      background: var(--s2);
+    }
+    .mock-sev {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .mock-sev.c { background: var(--red-dim);   color: var(--red-l);   border: 1px solid rgba(220,38,38,0.2); }
+    .mock-sev.w { background: var(--amber-dim); color: var(--amber-l); border: 1px solid rgba(217,119,6,0.2); }
+    .mock-flag-label { flex: 1; }
+    .mock-flag-cat  { font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+    .mock-flag-name { font-size: 12.5px; font-weight: 600; color: var(--text); }
+    .mock-flag-body {
+      padding: 12px 14px;
+      background: var(--s1);
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+      border-top: 1px solid var(--border);
+    }
+    .mock-fix {
+      margin-top: 8px;
+      padding: 8px 11px;
+      background: rgba(5,150,105,0.06);
+      border: 1px solid rgba(5,150,105,0.15);
+      border-radius: 6px;
+      font-size: 10.5px;
+      color: rgba(16,185,129,0.85);
+      font-family: var(--font-mono);
+    }
+
+    /* ══════════════════════════════════════════
+       TRUST SECTION
+    ══════════════════════════════════════════ */
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 48px;
+    }
+    .trust-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .trust-card:hover { border-color: var(--b2); }
+    .trust-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+    .trust-title {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .trust-desc {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════
+       SUPPORT DEV
+    ══════════════════════════════════════════ */
+    .support-section { background: var(--s1); }
+    .support-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .support-inner .sec-title { margin: 0 auto 14px; }
+    .support-inner .sec-sub   { margin: 0 auto 32px; }
+    .support-options {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    .support-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 13px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: none;
+    }
+    .support-btn.kofi {
+      background: #FF5E5B;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(255,94,91,0.25);
+    }
+    .support-btn.kofi:hover { background: #ff4a47; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,94,91,0.35); }
+    .support-btn.github {
+      background: var(--s3);
+      color: var(--text);
+      border: 1px solid var(--b2);
+    }
+    .support-btn.github:hover { background: var(--s2); transform: translateY(-2px); }
+    .support-note {
+      margin-top: 20px;
+      font-size: 12.5px;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════
+       FAQ
+    ══════════════════════════════════════════ */
+    .faq-section { background: var(--bg2); }
+    .faq-header { text-align: center; margin-bottom: 48px; }
+    .faq-list { max-width: 720px; margin: 0 auto; }
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .faq-q {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--s1);
+      transition: background 0.15s;
+      list-style: none;
+    }
+    .faq-q::-webkit-details-marker { display: none; }
+    .faq-q:hover { background: var(--s2); }
+    .faq-chevron {
+      flex-shrink: 0;
+      font-size: 12px;
+      color: var(--dim);
+      transition: transform 0.25s;
+    }
+    details[open] .faq-chevron { transform: rotate(180deg); }
+    .faq-a {
+      padding: 16px 20px 20px;
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.7;
+      border-top: 1px solid var(--border);
+      background: var(--s1);
+    }
+    .faq-a a { color: var(--red-l); text-decoration: underline; }
+
+    /* ══════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════ */
+    .footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 40px 0 32px;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .footer-brand-name {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .footer-tagline {
+      font-size: 11.5px;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+    .footer-links {
+      display: flex; gap: 24px; list-style: none; flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--dim);
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--muted); }
+    .footer-copy {
+      font-size: 11.5px;
+      color: var(--dim);
+    }
+    .footer-bottom {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-disclaimer {
+      font-size: 11px;
+      color: var(--dim);
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════
+       SCROLL REVEAL
+    ══════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .catch-grid { grid-template-columns: repeat(3, 1fr); }
+      .trust-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .hero { padding: 120px 0 72px; }
+      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+      .hero-visual { height: 280px; }
+      .how-steps { grid-template-columns: 1fr; }
+      .catch-grid { grid-template-columns: repeat(2, 1fr); }
+      .example-layout { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .trust-grid { grid-template-columns: 1fr 1fr; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 480px) {
+      .catch-grid { grid-template-columns: 1fr; }
+      .trust-grid { grid-template-columns: 1fr; }
+      .hero-ctas { flex-direction: column; }
+      .support-options { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <div class="container">
+    <a href="index.html" class="nav-brand" aria-label="ClauseGuard home">
+      <div class="nav-shield" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 2L3 5.5V11C3 14.87 6.08 18.5 10 19C13.92 18.5 17 14.87 17 11V5.5L10 2Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.2" stroke-linejoin="round"/>
+          <path d="M10 7V11" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="10" cy="13.5" r="0.9" fill="white"/>
+        </svg>
+      </div>
+      <span class="nav-name">ClauseGuard</span>
+    </a>
+    <ul class="nav-links" role="list">
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#catches">What We Catch</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/yourname/clauseguard" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://chrome.google.com/webstore" target="_blank" rel="noopener" class="nav-install">Add to Chrome</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Mobile navigation">
+  <a href="#how">How It Works</a>
+  <a href="#catches">What We Catch</a>
+  <a href="#faq">FAQ</a>
+  <a href="privacy/index.html">Privacy Policy</a>
+  <a href="https://github.com/yourname/clauseguard" target="_blank" rel="noopener">GitHub ↗</a>
+  <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener" style="color:var(--red-l); font-weight:600; margin-top:4px;">Add to Chrome →</a>
+</div>
+
+<main id="main-content">
+
+<!-- ══ HERO ══ -->
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-label">
+          <span aria-hidden="true"></span>
+          Free Chrome Extension · 100% Offline
+        </div>
+        <h1 class="hero-title" id="hero-heading">
+          Stop signing contracts<br>that could <em>cost you</em>
+        </h1>
+        <p class="hero-sub">
+          ClauseGuard scans employment, freelance, and B2B contracts for dangerous clauses, hidden traps, and missing protections — before you sign. 60+ detection rules. Instant results. No data leaves your browser.
+        </p>
+        <div class="hero-ctas">
+          <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1" y="1" width="14" height="14" rx="3" stroke="white" stroke-width="1.5"/><path d="M5 8h6M8 5v6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Add to Chrome — Free
+          </a>
+          <a href="https://github.com/yourname/clauseguard" target="_blank" rel="noopener" class="btn-ghost">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View Source
+          </a>
+        </div>
+        <div class="hero-note" role="list">
+          <span role="listitem">No account needed</span>
+          <span role="listitem">No data sent anywhere</span>
+          <span role="listitem">Works on PDFs &amp; Word docs</span>
+          <span role="listitem">Always free</span>
+        </div>
+      </div>
+
+      <!-- Hero Visual -->
+      <div class="hero-visual" aria-hidden="true">
+        <div class="shield-wrap">
+          <svg class="shield-svg" viewBox="0 0 180 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sg" x1="0" y1="0" x2="180" y2="200" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#EF4444"/>
+                <stop offset="100%" stop-color="#7F1D1D"/>
+              </linearGradient>
+              <linearGradient id="sginner" x1="0" y1="0" x2="180" y2="200" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FCA5A5" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#DC2626" stop-opacity="0.05"/>
+              </linearGradient>
+            </defs>
+            <!-- Shield outer -->
+            <path d="M90 8L18 38V100C18 145 54 182 90 192C126 182 162 145 162 100V38L90 8Z" fill="url(#sg)" opacity="0.95"/>
+            <!-- Shield inner highlight -->
+            <path d="M90 22L30 48V100C30 138 62 170 90 179C118 170 150 138 150 100V48L90 22Z" fill="url(#sginner)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+            <!-- Exclamation mark -->
+            <rect x="83" y="60" width="14" height="56" rx="7" fill="white" opacity="0.92"/>
+            <circle cx="90" cy="138" r="9" fill="white" opacity="0.92"/>
+          </svg>
+
+          <!-- Floating flag chips -->
+          <div class="flag-chip c"><div class="sev-dot"></div>Unlimited Liability</div>
+          <div class="flag-chip c"><div class="sev-dot"></div>All IP Assigned</div>
+          <div class="flag-chip w"><div class="sev-dot"></div>Net-90 Payment</div>
+          <div class="flag-chip m"><div class="sev-dot"></div>Auto-Renewal Trap</div>
+          <div class="flag-chip w"><div class="sev-dot"></div>3-Year Non-Compete</div>
+          <div class="flag-chip c"><div class="sev-dot"></div>Forced Arbitration</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ STATS BAND ══ -->
+<div class="stats-band" role="region" aria-label="Key statistics">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-num" data-count="60">0</div>
+        <div class="stat-lbl">Detection Rules</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-count="12">0</div>
+        <div class="stat-lbl">Clause Categories</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-count="10">0</div>
+        <div class="stat-lbl">Missing Clause Checks</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" style="font-size:32px; padding-top:4px">100%</div>
+        <div class="stat-lbl">Offline &amp; Private</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section class="how-section reveal" id="how" aria-labelledby="how-heading">
+  <div class="container">
+    <div class="how-header">
+      <p class="sec-tag">Simple &amp; Instant</p>
+      <h2 class="sec-title" id="how-heading">Three steps. Zero friction.</h2>
+      <p class="sec-sub">Open your contract, click the extension, read your report. No sign-up, no configuration, no waiting.</p>
+    </div>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-step-num" aria-hidden="true">01</div>
+        <div class="how-step-icon red" aria-hidden="true">📄</div>
+        <h3>Open Your Contract</h3>
+        <p>Navigate to any contract page, PDF, Word document, Google Doc, or signing platform like DocuSign or PandaDoc.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num" aria-hidden="true">02</div>
+        <div class="how-step-icon amber" aria-hidden="true">🛡️</div>
+        <h3>Click Scan</h3>
+        <p>Click the ClauseGuard shield icon in your Chrome toolbar and hit <em>Scan Full Page</em>. Results appear in under a second.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num" aria-hidden="true">03</div>
+        <div class="how-step-icon green" aria-hidden="true">📊</div>
+        <h3>Review Your Report</h3>
+        <p>Get a full report with every red flag, plain-English explanations, impact assessments, and suggested clause fixes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ WHAT WE CATCH ══ -->
+<section class="reveal" id="catches" aria-labelledby="catches-heading">
+  <div class="container">
+    <div class="catch-header">
+      <p class="sec-tag">60+ Rules Across</p>
+      <h2 class="sec-title" id="catches-heading">12 Categories of <em>Red Flags</em></h2>
+      <p class="sec-sub">Built specifically for the contracts freelancers, employees, and businesses sign every day.</p>
+    </div>
+    <div class="catch-grid" role="list">
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">💡</div>
+        <div class="catch-card-name">Intellectual Property</div>
+        <div class="catch-card-desc">Work-for-hire grabs, pre-existing IP claims, moral rights waivers, sublicensing traps</div>
+        <div class="catch-card-count">5 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">🚫</div>
+        <div class="catch-card-name">Non-Compete</div>
+        <div class="catch-card-desc">Overly broad scope, excessive duration, no-moonlighting, worldwide restrictions</div>
+        <div class="catch-card-count">4 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">💰</div>
+        <div class="catch-card-name">Payment Terms</div>
+        <div class="catch-card-desc">Net-60+ delays, conditional satisfaction payment, unilateral fee cuts, no kill fee</div>
+        <div class="catch-card-count">5 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">⚡</div>
+        <div class="catch-card-name">Liability</div>
+        <div class="catch-card-desc">Unlimited exposure, one-sided indemnification, consequential damage waivers</div>
+        <div class="catch-card-count">4 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">🚪</div>
+        <div class="catch-card-name">Termination</div>
+        <div class="catch-card-desc">Immediate exit without notice, auto-renewal traps, one-sided exit rights, clawbacks</div>
+        <div class="catch-card-count">4 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">🔄</div>
+        <div class="catch-card-name">Scope &amp; Deliverables</div>
+        <div class="catch-card-desc">Unlimited revisions, vague duties, unilateral scope changes</div>
+        <div class="catch-card-count">3 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">🔒</div>
+        <div class="catch-card-name">Confidentiality</div>
+        <div class="catch-card-desc">Indefinite obligations, overbroad scope, portfolio bans, no carve-outs</div>
+        <div class="catch-card-count">3 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">⚖️</div>
+        <div class="catch-card-name">Dispute Resolution</div>
+        <div class="catch-card-desc">Mandatory arbitration, jury trial waivers, unfavourable jurisdiction, no cure period</div>
+        <div class="catch-card-count">3 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">📂</div>
+        <div class="catch-card-name">Data &amp; Privacy</div>
+        <div class="catch-card-desc">Client data ownership, personal device surveillance</div>
+        <div class="catch-card-count">2 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">📋</div>
+        <div class="catch-card-name">Contract Control</div>
+        <div class="catch-card-desc">Unilateral modifications, assignment without consent, entire-agreement traps</div>
+        <div class="catch-card-count">3 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">🏢</div>
+        <div class="catch-card-name">Employment-Specific</div>
+        <div class="catch-card-desc">Unpaid overtime, at-will with no severance, forced relocation, discretionary bonuses</div>
+        <div class="catch-card-count">4 rules</div>
+      </div>
+      <div class="catch-card" role="listitem">
+        <div class="catch-card-icon" aria-hidden="true">🤝</div>
+        <div class="catch-card-name">B2B-Specific</div>
+        <div class="catch-card-desc">Uncompensated exclusivity, one-sided SLA penalties, source-code surrender</div>
+        <div class="catch-card-count">3 rules</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ LIVE EXAMPLE ══ -->
+<section class="example-section reveal" id="example" aria-labelledby="example-heading">
+  <div class="container">
+    <div class="example-layout">
+      <div class="example-text">
+        <p class="sec-tag">See It In Action</p>
+        <h2 class="sec-title" id="example-heading">What your<br>report looks like</h2>
+        <p class="sec-sub">Every flag comes with a severity rating, a plain-English explanation of the risk, and a concrete suggested fix you can use in negotiation.</p>
+        <div class="example-bullets">
+          <div class="ex-bullet">
+            <div class="ex-bullet-icon red" aria-hidden="true">🔴</div>
+            <div class="ex-bullet-text">
+              <strong>Critical flags</strong>
+              <span>Clauses that could cause significant financial loss, IP forfeiture, or legal liability</span>
+            </div>
+          </div>
+          <div class="ex-bullet">
+            <div class="ex-bullet-icon amber" aria-hidden="true">🟡</div>
+            <div class="ex-bullet-text">
+              <strong>Warning flags</strong>
+              <span>Unfair clauses worth negotiating — they won't kill you but they should change</span>
+            </div>
+          </div>
+          <div class="ex-bullet">
+            <div class="ex-bullet-icon green" aria-hidden="true">🟢</div>
+            <div class="ex-bullet-text">
+              <strong>Minor flags</strong>
+              <span>Slightly one-sided terms — worth noting, low urgency</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mocked report card -->
+      <div class="report-mockup" role="img" aria-label="Example ClauseGuard report showing detected red flags">
+        <div class="mock-topbar">
+          <div class="mock-dot" style="background:#EF4444" aria-hidden="true"></div>
+          <div class="mock-dot" style="background:#F59E0B; margin-left:4px" aria-hidden="true"></div>
+          <div class="mock-dot" style="background:#10B981; margin-left:4px" aria-hidden="true"></div>
+          <span class="mock-title">clauseguard://report · Freelancer Agreement</span>
+        </div>
+        <div class="mock-body">
+          <div class="mock-overview">
+            <div class="mock-pills">
+              <span class="mock-pill type">📄 Freelancer / Client Agreement</span>
+              <span class="mock-pill red">🔴 High Risk</span>
+              <span class="mock-pill score">Score: 78/100</span>
+            </div>
+            <div class="mock-overview-text">
+              Scanned against 60+ rules. Found <strong style="color:#EF4444">8 flags</strong> (3 critical, 4 warning, 1 minor) and <strong style="color:#F59E0B">3 missing clauses</strong>.
+            </div>
+          </div>
+
+          <div class="mock-flag critical">
+            <div class="mock-flag-head">
+              <span class="mock-sev c">Critical</span>
+              <div class="mock-flag-label">
+                <div class="mock-flag-cat">Intellectual Property</div>
+                <div class="mock-flag-name">All Inventions Assigned to Client</div>
+              </div>
+            </div>
+            <div class="mock-flag-body">
+              Everything you create — including side projects — becomes the client's property.
+              <div class="mock-fix">Fix: "Assignment excludes inventions on Contractor's own time unrelated to Client's business."</div>
+            </div>
+          </div>
+
+          <div class="mock-flag warning">
+            <div class="mock-flag-head">
+              <span class="mock-sev w">Warning</span>
+              <div class="mock-flag-label">
+                <div class="mock-flag-cat">Payment Terms</div>
+                <div class="mock-flag-name">Net-90 Payment Terms</div>
+              </div>
+            </div>
+            <div class="mock-flag-body">
+              You must wait 90 days after invoicing to receive payment — severe cash flow risk.
+              <div class="mock-fix">Fix: Negotiate to Net-30. Add 1.5% monthly interest on overdue invoices.</div>
+            </div>
+          </div>
+
+          <div class="mock-flag critical">
+            <div class="mock-flag-head">
+              <span class="mock-sev c">Critical</span>
+              <div class="mock-flag-label">
+                <div class="mock-flag-cat">Scope</div>
+                <div class="mock-flag-name">Unlimited Revisions Required</div>
+              </div>
+            </div>
+            <div class="mock-flag-body">
+              No limit on changes — a fixed-price project could require unlimited unpaid rework.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TRUST ══ -->
+<section class="reveal" id="trust" aria-labelledby="trust-heading">
+  <div class="container">
+    <div style="text-align:center">
+      <p class="sec-tag">Built For Trust</p>
+      <h2 class="sec-title" id="trust-heading">Your contract never leaves<br>your <em>browser</em></h2>
+    </div>
+    <div class="trust-grid" role="list">
+      <div class="trust-card" role="listitem">
+        <div class="trust-icon" aria-hidden="true">🔒</div>
+        <div class="trust-title">100% Offline</div>
+        <div class="trust-desc">All scanning runs entirely in your browser using local pattern matching. Zero network calls made during analysis.</div>
+      </div>
+      <div class="trust-card" role="listitem">
+        <div class="trust-icon" aria-hidden="true">👤</div>
+        <div class="trust-title">No Account Needed</div>
+        <div class="trust-desc">Install and start scanning immediately. No sign-up, no email, no profile. Nothing to create or remember.</div>
+      </div>
+      <div class="trust-card" role="listitem">
+        <div class="trust-icon" aria-hidden="true">🆓</div>
+        <div class="trust-title">Free Forever</div>
+        <div class="trust-desc">ClauseGuard is and will remain free. No freemium limits, no paid tiers, no subscription required.</div>
+      </div>
+      <div class="trust-card" role="listitem">
+        <div class="trust-icon" aria-hidden="true">📖</div>
+        <div class="trust-title">Open Source</div>
+        <div class="trust-desc">Full source code is publicly available on GitHub. Read every line, verify every rule, and trust what you use.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SUPPORT DEV ══ -->
+<section class="support-section reveal" id="support" aria-labelledby="support-heading">
+  <div class="container">
+    <div class="support-inner">
+      <p class="sec-tag" style="display:block; margin-bottom:12px">Support the Project</p>
+      <h2 class="sec-title" id="support-heading">ClauseGuard is free.<br>Your support keeps it that way.</h2>
+      <p class="sec-sub">Building and maintaining a quality free tool takes time. If ClauseGuard saved you from a bad contract, consider buying me a coffee.</p>
+      <div class="support-options">
+        <a href="https://ko-fi.com/yourname" target="_blank" rel="noopener" class="support-btn kofi" aria-label="Support on Ko-fi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18v2c0 5-4 9-9 9s-9-4-9-9V6z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/><path d="M21 8h1a2 2 0 010 4h-1" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M8 21h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M12 18v3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Buy Me a Coffee
+        </a>
+        <a href="https://github.com/yourname/clauseguard" target="_blank" rel="noopener" class="support-btn github" aria-label="Star on GitHub">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          ⭐ Star on GitHub
+        </a>
+      </div>
+      <p class="support-note">
+        You can also contribute by submitting new red flag rules, reporting false positives, or improving the scanner on GitHub. Every contribution helps freelancers and employees worldwide.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FAQ ══ -->
+<section class="faq-section reveal" id="faq" aria-labelledby="faq-heading">
+  <div class="container">
+    <div class="faq-header">
+      <p class="sec-tag">Got Questions?</p>
+      <h2 class="sec-title" id="faq-heading">Frequently Asked</h2>
+    </div>
+    <div class="faq-list">
+
+      <details class="faq-item">
+        <summary class="faq-q">
+          Is ClauseGuard actually free? What's the catch?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </summary>
+        <div class="faq-a">
+          Completely free, no catch. ClauseGuard runs locally in your browser using a built-in rule dictionary — there's no AI backend, no server costs, and nothing to pay for. The source code is open. If you find it useful, a Ko-fi or GitHub star is appreciated but entirely optional.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">
+          Does my contract text get sent anywhere?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </summary>
+        <div class="faq-a">
+          Never. All scanning runs entirely within your Chrome browser using local JavaScript. No network requests are made during analysis. Your contract text is stored temporarily in Chrome's local storage between the popup and the results tab, then deleted immediately. See our <a href="privacy/index.html">Privacy Policy</a> for full details.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">
+          What types of contracts does it work on?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </summary>
+        <div class="faq-a">
+          ClauseGuard works on employment contracts, freelancer/client agreements, B2B commercial agreements, NDAs, and service agreements. It detects contract type automatically and scores risk accordingly. It works on web pages, PDFs opened in Chrome, Word documents (.docx), Google Docs, and signing platforms like DocuSign, PandaDoc, and HelloSign.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">
+          Can it read PDFs and Word documents?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </summary>
+        <div class="faq-a">
+          Yes. For PDFs opened in Chrome, ClauseGuard fetches the raw file and extracts text from the PDF content streams. For Word documents (.docx), it reads the ZIP-based file format to extract text from document.xml. Note: scanned/image-based PDFs cannot be read — if a PDF is image-only, open it in Google Docs first (which has built-in OCR) and scan from there.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">
+          Is this legal advice?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </summary>
+        <div class="faq-a">
+          No. ClauseGuard is an informational tool that flags potentially problematic contract language based on common patterns. It does not constitute legal advice. For high-value or complex contracts, always consult a qualified attorney in your jurisdiction. The tool is designed to help you ask better questions and know what to negotiate — not to replace professional legal counsel.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">
+          How do I report a false positive or suggest a new rule?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </summary>
+        <div class="faq-a">
+          Open an issue on <a href="https://github.com/yourname/clauseguard" target="_blank" rel="noopener">GitHub</a>. Include the clause text that triggered the false positive and the contract context. For new rules, describe the clause pattern, its risk category, and why it's harmful. Community contributions are welcome and reviewed promptly.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-q">
+          Does it work on all websites?
+          <span class="faq-chevron" aria-hidden="true">▼</span>
+        </summary>
+        <div class="faq-a">
+          It works on any standard web page and most contract platforms. There are two exceptions: Chrome's own system pages (chrome://) cannot be accessed by any extension, and some heavily sandboxed enterprise platforms may block content scripts. In those cases, try selecting and copying the contract text manually, pasting it into a plain text file or Google Doc, and scanning from there.
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ══ FOOTER ══ -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-shield" aria-hidden="true" style="width:28px;height:28px;border-radius:7px">
+          <svg viewBox="0 0 20 20" fill="none" style="width:14px;height:14px">
+            <path d="M10 2L3 5.5V11C3 14.87 6.08 18.5 10 19C13.92 18.5 17 14.87 17 11V5.5L10 2Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M10 7V11" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="10" cy="13.5" r="0.9" fill="white"/>
+          </svg>
+        </div>
+        <div>
+          <div class="footer-brand-name">ClauseGuard</div>
+          <div class="footer-tagline">Contract Red Flag Detector · Free Chrome Extension</div>
+        </div>
+      </div>
+      <ul class="footer-links" role="list">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="privacy.html">Privacy Policy</a></li>
+        <li><a href="https://github.com/yourname/clauseguard" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://ko-fi.com/yourname" target="_blank" rel="noopener">Support Dev</a></li>
+        <li><a href="https://chrome.google.com/webstore" target="_blank" rel="noopener">Chrome Store</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-disclaimer">
+        ClauseGuard is an informational tool only. It does not constitute legal advice. Always consult a qualified attorney before signing any contract, especially for high-value or complex agreements.
+      </p>
+      <p class="footer-copy">© <span id="yr"></span> ClauseGuard. Open source under MIT License.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Year
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Mobile menu toggle
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded', isOpen);
+  });
+  // Close on outside click
+  document.addEventListener('click', e => {
+    if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+      mobileMenu.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  // Counter animation for stat numbers
+  function animateCounter(el, target, duration = 1200) {
+    let start = null;
+    const step = ts => {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      el.textContent = Math.round(eased * target) + (target >= 60 ? '+' : '');
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  const statsObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('[data-count]').forEach(el => {
+          animateCounter(el, parseInt(el.dataset.count));
+        });
+        statsObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  const statsBand = document.querySelector('.stats-band');
+  if (statsBand) statsObserver.observe(statsBand);
+</script>
+
+</body>
+</html>
